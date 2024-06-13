@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity,ActivityIndicator } from 'react-native';
 import { Card } from 'react-native-paper';
 import AnimatedSquares from './AnimatedSquares';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Svg, { Circle, Path, G, Defs, ClipPath, Use, Polygon, Rect, Ellipse } from 'react-native-svg';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// import GorillaSVG from './GorillaSVG';
 const GorillaSVG = ({ isPasswordFocused }) => (
   <View style={styles.svgContainer}>
     <Svg style={styles.mySVG} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
@@ -119,62 +120,57 @@ const GorillaSVG = ({ isPasswordFocused }) => (
 );
 
 const LoginScreen = () => {
+  const navigation = useNavigation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
-  const navigation = useNavigation();
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (username === '' || password === '') {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
-    const requestBody = { username, password };
+    setLoading(true);
 
-    axios.post('https://jd1.bigapple.in/api/login', requestBody, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    })
-      .then((response) => {
-        const data = response.data;
-        if (data.success) {
-          Alert.alert('Success', `Logged in as ${username}`);
-          console.log("Logged in");
-          navigation.navigate('Companies');
-        } else {
-          Alert.alert('Error', data.message || 'Login failed');
-          console.log("Login Fail");
-        }
-      })
-      .catch((error) => {
-        if (error.response) {
-          // Server responded with a status other than 200 range
-          console.log("Error Response:", error.response.data);
-          Alert.alert('Error', 'An error occurred. Please try again later.');
-        } else if (error.request) {
-          // Request was made but no response was received
-          console.log("Error Request:", error.request);
-          Alert.alert('Error', 'No response from server. Please try again later.');
-        } else {
-          // Something happened in setting up the request
-          console.log("Error Message:", error.message);
-          Alert.alert('Error', 'An unexpected error occurred. Please try again later.');
-        }
-        console.log("Error Config:", error.config);
+    try {
+      const requestBody = { username, password };
+      const response = await axios.post('https://jd1.bigapple.in/api/login', requestBody, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
       });
-  };
 
+      const data = response.data;
+      if (data.success) {
+        await AsyncStorage.setItem('token', data.token);
+        Alert.alert('Success', `Logged in as ${username}`);
+        navigation.navigate('Companies');
+      } else {
+        Alert.alert('Error', data.message || 'Login failed');
+      }
+    } catch (error) {
+      if (error.response) {
+        Alert.alert('Error', 'An error occurred. Please try again later.');
+      } else if (error.request) {
+        Alert.alert('Error', 'No response from server. Please try again later.');
+      } else {
+        Alert.alert('Error', 'An unexpected error occurred. Please try again later.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      < AnimatedSquares/>
+      <AnimatedSquares /> 
+      {/* <GorillaSVG/> */}
       <Card style={styles.card}>
         <Card.Content>
-          <GorillaSVG isPasswordFocused={isPasswordFocused} />
+          <GorillaSVG isPasswordFocused={isPasswordFocused} /> 
           <View style={styles.inputContainer}>
             <Icon name="user" size={20} color="#333" style={styles.icon} />
             <TextInput
@@ -200,15 +196,14 @@ const LoginScreen = () => {
               <Icon name={showPassword ? 'eye-slash' : 'eye'} size={20} color="#333" />
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Sign in</Text>
+          <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+            <Text style={styles.buttonText}>{loading ? 'Loading...' : 'Sign in'}</Text>
           </TouchableOpacity>
         </Card.Content>
       </Card>
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
