@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AnimatedSquares from './AnimatedSquares';
 import GorillaSVG from './GorillaSVG';
-
+import LoginBackground from './LoginBackground'
 const LoginScreen = () => {
   const navigation = useNavigation();
   const [username, setUsername] = useState('');
@@ -69,6 +69,7 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.container}>
+      <LoginBackground/>
       <AnimatedSquares />
       <Card style={styles.card}>
         <View style={styles.svgContainer}>
@@ -93,8 +94,7 @@ const LoginScreen = () => {
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
-              onFocus={() => setShowPassword(true)}
-              onBlur={() => setShowPassword(false)}
+              autoCapitalize="none"
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Icon name={showPassword ? 'eye-slash' : 'eye'} size={20} color="#333" />

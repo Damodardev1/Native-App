@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useRoute } from '@react-navigation/native';
-import Header from '../components/Header'; // Adjust the path based on your project structure
+import Header from '../components/Header'; 
 
 const CompanyDashboard = () => {
   const route = useRoute();
@@ -10,11 +10,10 @@ const CompanyDashboard = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <View style={styles.content}>
-        <Text>Database Name: {dbName}</Text>
-        <Text>Company Name: {compName}</Text>
-        {/* Render the rest of your component content here */}
-      </View>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text style={styles.text}>Database Name: {dbName}</Text>
+        <Text style={styles.text}>Company Name: {compName}</Text>
+      </ScrollView>
     </View>
   );
 };
@@ -22,12 +21,17 @@ const CompanyDashboard = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 60, 
   },
   content: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  text: {
+    textAlign: 'center',
+    maxWidth: '100%',
   },
 });
 

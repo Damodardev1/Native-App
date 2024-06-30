@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // import Companies from './components/Companies';
 import CompanyDashboard from './CompanyDashboard';
 import LoginScreen from './components/LoginScreen';
-
+// import AddTransactionInsertRoleFields from './app/AddTransactionInsertRoleFields'; 
 const Stack = createStackNavigator();
 
 const App = () => {
@@ -24,7 +24,7 @@ const App = () => {
   }, []);
 
   if (loading) {
-    return null; // or render a loading indicator
+    return null; 
   }
 
   return (
@@ -34,7 +34,7 @@ const App = () => {
           <>
             <Stack.Screen name="Companies" component={Companies} />
             <Stack.Screen name="CompanyDashboard" component={CompanyDashboard} />
-          </>
+            <Stack.Screen name="AddTransactionInsertRoleFields" component={AddTransactionInsertRoleFields} />          </>
         ) : (
           <Stack.Screen
             name="Login"
