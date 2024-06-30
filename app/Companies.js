@@ -16,14 +16,8 @@ const Companies = () => {
 
   useEffect(() => {
     getUserId();
-    getToken();
-  }, []);
-
-  useEffect(() => {
-    if (token) {
-      fetchUserData();
-    }
-  }, [token]);
+    fetchUserData(); 
+  }, []); 
 
   const getUserId = async () => {
     try {
@@ -36,39 +30,33 @@ const Companies = () => {
     }
   };
 
-  const getToken = async () => {
-    try {
-      const storedToken = await AsyncStorage.getItem('token');
-      if (storedToken !== null) {
-        setToken(storedToken);
-      } else {
-        console.log('No token found in AsyncStorage');
-      }
-    } catch (error) {
-      console.error('Error fetching token from AsyncStorage:', error);
-    }
-  };
-
   const fetchUserData = async () => {
     try {
-      const response = await axios.get('https://jd1.bigapple.in/api/companies', {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      
-      if (response.status === 200) {
-        const { datas } = response.data;
-        const formattedCompanies = datas.map((company) => ({
-          ...company,
-          fs_date: formatDate(company.fs_date),
-          fe_date: formatDate(company.fe_date),
-        }));
-        setCompanies(formattedCompanies);
-        setIsDataLoaded(true);
+      const storedToken = await AsyncStorage.getItem('token');
+      if (storedToken) {
+        console.log('Token set:', storedToken);
+        setToken(storedToken); 
+        const response = await axios.get('https://jd1.bigapple.in/api/companies', {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (response.status === 200) {
+          const { datas } = response.data;
+          const formattedCompanies = datas.map((company) => ({
+            ...company,
+            fs_date: formatDate(company.fs_date),
+            fe_date: formatDate(company.fe_date),
+          }));
+          setCompanies(formattedCompanies);
+          setIsDataLoaded(true);
+        } else {
+          console.error('Failed to fetch companies:', response.status);
+          setIsDataLoaded(false);
+        }
       } else {
-        console.error('Failed to fetch companies:', response.status);
+        console.log('No token found in AsyncStorage');
         setIsDataLoaded(false);
       }
     } catch (error) {
@@ -109,7 +97,6 @@ const Companies = () => {
       await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('user_id');
       await AsyncStorage.removeItem('Nickname');
-
       navigation.navigate('index');
     } catch (error) {
       console.error('Error logging out:', error);
@@ -119,12 +106,6 @@ const Companies = () => {
 
   const handleNavigate = async (company) => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        console.error('Access token not found.');
-        return;
-      }
-
       await AsyncStorage.setItem('dbName', company.db_name);
       await AsyncStorage.setItem('compName', company.comp_name);
 
@@ -132,23 +113,23 @@ const Companies = () => {
         `https://jd1.bigapple.in/api/${company.db_name}/company-dashboard`, 
         {
           headers: {
-            Authorization: `Bearer ${token}`,
-            comp_name: company.comp_name,
+            'Content-Type': 'application/json',
           },
         }
+        
       );
 
       if (response.status === 200) {
-        console.log('Successfully sent dbName to the backend:', response.data);
+        console.log('Successfully sent dbName:', response.data);
         navigation.navigate('CompanyDashboard', {
           dbName: company.db_name,
           compName: company.comp_name,
         });
       } else {
-        console.error('Failed to send dbName to the backend:', response.status);
+        console.error('Failed to send dbName:', response.status);
       }
     } catch (error) {
-      console.error('Error sending dbName to the backend:', error);
+      console.error('Error sending dbName:', error);
       Alert.alert('Error', 'Failed to navigate to company dashboard. Please try again.');
     }
   };
@@ -175,31 +156,37 @@ const Companies = () => {
       </View>
       <View style={styles.body}>
         {isDataLoaded ? (
-          <ScrollView horizontal={true}>
-            <DataTable>
-              <DataTable.Header>
-                <DataTable.Title style={{ width: 40 }}>#</DataTable.Title>
-                <DataTable.Title style={{ width: 60 }}>ID</DataTable.Title>
-                <DataTable.Title style={{ width: 150 }}>Company Name</DataTable.Title>
-                <DataTable.Title style={{ width: 120 }}>Database Name</DataTable.Title>
-                <DataTable.Title style={{ width: 100 }}>Start Date</DataTable.Title>
-                <DataTable.Title style={{ width: 100 }}>End Date</DataTable.Title>
-              </DataTable.Header>
-              {companies.map((company, index) => (
-                <DataTable.Row key={company.id} style={index % 2 === 0 ? styles.evenRow : styles.oddRow}>
-                  <DataTable.Cell style={{ width: 40 }}>
-                    <TouchableOpacity onPress={() => handleNavigate(company)}>
-                      <Text style={styles.linkText}>Go to</Text>
-                    </TouchableOpacity>
-                  </DataTable.Cell>
-                  <DataTable.Cell style={{ width: 60 }}>{company.id}</DataTable.Cell>
-                  <DataTable.Cell style={{ width: 150 }}>{company.comp_name}</DataTable.Cell>
-                  <DataTable.Cell style={{ width: 120 }}>{company.db_name}</DataTable.Cell>
-                  <DataTable.Cell style={{ width: 100 }}>{company.fs_date}</DataTable.Cell>
-                  <DataTable.Cell style={{ width: 100 }}>{company.fe_date}</DataTable.Cell>
-                </DataTable.Row>
-              ))}
-            </DataTable>
+          <ScrollView horizontal>
+            <View>
+              <DataTable>
+                <DataTable.Header>
+                  <DataTable.Title style={{ width: 40 }}>#</DataTable.Title>
+                  <DataTable.Title style={{ width: 60 }}>ID</DataTable.Title>
+                  <DataTable.Title style={{ width: 150 }}>Company Name</DataTable.Title>
+                  <DataTable.Title style={{ width: 120 }}>Database Name</DataTable.Title>
+                  <DataTable.Title style={{ width: 100 }}>Start Date</DataTable.Title>
+                  <DataTable.Title style={{ width: 100 }}>End Date</DataTable.Title>
+                </DataTable.Header>
+              </DataTable>
+              <ScrollView>
+                <DataTable>
+                  {companies.map((company, index) => (
+                    <DataTable.Row key={company.id} style={index % 2 === 0 ? styles.evenRow : styles.oddRow}>
+                      <DataTable.Cell style={{ width: 40 }}>
+                        <TouchableOpacity onPress={() => handleNavigate(company)}>
+                          <Text style={styles.linkText}>Go to</Text>
+                        </TouchableOpacity>
+                      </DataTable.Cell>
+                      <DataTable.Cell style={{ width: 60 }}>{company.id}</DataTable.Cell>
+                      <DataTable.Cell style={{ width: 150 }}>{company.comp_name}</DataTable.Cell>
+                      <DataTable.Cell style={{ width: 120 }}>{company.db_name}</DataTable.Cell>
+                      <DataTable.Cell style={{ width: 100 }}>{company.fs_date}</DataTable.Cell>
+                      <DataTable.Cell style={{ width: 100 }}>{company.fe_date}</DataTable.Cell>
+                    </DataTable.Row>
+                  ))}
+                </DataTable>
+              </ScrollView>
+            </View>
           </ScrollView>
         ) : (
           <Text>Loading ...</Text>
