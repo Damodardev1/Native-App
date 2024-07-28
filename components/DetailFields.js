@@ -3,13 +3,216 @@ import { View, Text, Modal, TouchableOpacity, TextInput, ScrollView, StyleSheet 
 import axios from 'axios';
 import API_BASE_URL from '../apiconfig';
 
-const DetailFields = ({ fields, dbName, Table_Name }) => {
+const DetailFields = ({ fields, dbName, Table_Name, tran_id }) => {
   const [options, setOptions] = useState({});
   const [selectedValues, setSelectedValues] = useState({});
   const [searchTerms, setSearchTerms] = useState({});
   const [currentField, setCurrentField] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalField, setModalField] = useState('');
+  const [function11Formulas, setFunction11Formulas] = useState({});
+  const [formulas, setFormulas] = useState([]);
+
+  useEffect(() => {
+    fetchFunction11Details();
+  }, []);
+
+  const fetchFunction11Details = async () => {
+    try {
+      // const tablename = Table_Name;
+      const response = await axios.get(`${API_BASE_URL}/${dbName}/get-Function11-Det-Dependent-Formula-Fields/${Table_Name}`);
+      const resultArray = response.data;
+      setFields(resultArray);
+      initializeAndBindFields(resultArray);
+    } catch (error) {
+      console.error('Error fetching data', error);
+    }
+  };
+
+  const initializeAndBindFields = (resultArray) => {
+    const newFormulas = [];
+    resultArray.forEach((result) => {
+      const { formula_fields, field_name, tranId, tab_id, Table_Name } = result;
+      formula_fields.forEach((formulafield) => {
+        let detailsTable = Table_Name + '_det';
+        if (formulafield['is_det'] == 1 && typeof formulafield === 'string') {
+          const pattern = /_IS_(.*?)(?=[A-Za-z]+_)/;
+          const match = formulafield.match(pattern);
+          if (match) {
+            detailsTable = match[1];
+          }
+        }
+
+        const dettableElement = document.querySelector(`[data-tablename=${detailsTable}]`);
+        let detTxnId = 0;
+        if (dettableElement) {
+          const detId = dettableElement.getAttribute('id');
+          const parts = detId.split('_');
+          if (parts.length >= 2) {
+            detTxnId = parts[1];
+          }
+        }
+
+        let forfields_string;
+        if (formulafield['is_det'] == 1) {
+          forfields_string = document.querySelector(`[data-fieldname='${formulafield['fromfield']}'][data-isdet='${formulafield['is_det']}'][data-row='${rownum}'][data-table='${detailsTable}']`)?.dataset.forfields;
+        } else {
+          forfields_string = document.querySelector(`[data-fieldname='${formulafield['fromfield']}'][data-isdet='${formulafield['is_det']}']`)?.dataset.forfields;
+        }
+
+        let forfields = forfields_string ? JSON.parse(forfields_string) : [];
+        forfields.push({
+          'forfieldname': field_name,
+          'forisdet': 0,
+          'fortabid': tab_id,
+          'fromfieldname': formulafield['fromfield'],
+          'fromfieldisdet': formulafield['is_det']
+        });
+
+        let fromtarget;
+        if (formulafield['is_det'] == 1) {
+          fromtarget = document.querySelector(`[data-fieldname='${formulafield['fromfield']}'][data-isdet='${formulafield['is_det']}'][data-row='${rownum}'][data-table='${detailsTable}']`);
+        } else {
+          fromtarget = document.querySelector(`[data-fieldname='${formulafield['fromfield']}'][data-isdet='${formulafield['is_det']}']`);
+        }
+
+        if (fromtarget) {
+          fromtarget.dataset.forfields = JSON.stringify(forfields);
+          document.querySelector(`#tbldetails_${detTxnId}`)?.addEventListener('keydown', (e) => handleKeyDown(e, detailsTable, rownum));
+          document.querySelector(`#tbldetails_${detTxnId}`)?.addEventListener('input', (e) => handleInput(e, detailsTable, rownum));
+        }
+      });
+    });
+    setFormulas(newFormulas);
+  };
+
+  const handleKeyDown = (e, detailsTable, rownum) => {
+    const keyCode = e.keyCode || e.which;
+    if (e.type === 'input' || keyCode === 229 || (e.type === 'keydown' && (keyCode === 9 || keyCode === 13 || keyCode === 229))) {
+      calculateAllFunction11FieldFormulaPricing(detailsTable, rownum);
+    }
+  };
+
+  const handleInput = (e, detailsTable, rownum) => {
+    calculateAllFunction11FieldFormulaPricing(detailsTable, rownum);
+  };
+
+  const calculateAllFunction11FieldFormulaPricing = (detailsTable, rownum) => {
+  };
+
+
+  useEffect(() => {
+    // Fetch function11 fields
+    const fetchFunction11Fields = async () => {
+        const url = `${API_BASE_URL}/${dbName}/get-Function11-Field-Formulas/${Table_Name}`;
+        try {
+            const response = await axios.get(url);
+            const resultarray = response.data;
+
+            setFunction11Fields(resultarray);
+
+            const newFormulas = {};
+            resultarray.forEach(result => {
+                const fieldname = result['field_name'];
+                newFormulas[fieldname] = result['formula_fields'];
+            });
+            setFormulas(newFormulas);
+        } catch (error) {
+            console.error("Error fetching function11 fields:", error);
+        }
+    };
+
+    fetchFunction11Fields();
+}, [dbName, Table_Name]);
+
+// const handleInputChange = (fieldname, value, formulafields) => {
+//     formulafields.forEach(formulafield => {
+//         const forfields = formulas[formulafield.fromfield] || [];
+//         forfields.push({
+//             'forfieldname': fieldname,
+//             'forisdet': 0,
+//             'fortabid': 'Header',
+//             'fromfieldname': formulafield['fromfield'],
+//             'fromfieldisdet': formulafield['is_det']
+//         });
+
+//         setFormulas(prevFormulas => ({
+//             ...prevFormulas,
+//             [formulafield.fromfield]: forfields
+//         }));
+//     });
+
+//     // Your calculation logic here
+//     calculateFunction11FieldFormulaHeader(fieldname, value, formulafields);
+// };
+
+  const fetchFunction11Formulas = async (tableName) => {
+    try {
+      const appendDetToTableName = (tableName) => `${tableName}_det`;
+      const modifiedTableName = appendDetToTableName(Table_Name);
+      const response = await axios.get(`${API_BASE_URL}/${dbName}/get-Function11-Field-Formulas-Only-Header/${modifiedTableName}`);
+      const resultArray = response.data;
+      const formulas = {};
+      
+      resultArray.forEach(result => {
+        const { field_name, formula_fields, tab_id } = result;
+        const formulaData = {
+          formula_fields: formula_fields,
+          tab_id: tab_id
+        };
+        formulas[field_name] = formulaData;
+      });
+
+      setFunction11Formulas(formulas);
+    } catch (error) {
+      console.error('Error fetching function 11 formulas:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchFunction11Formulas(Table_Name);
+  }, [dbName, Table_Name]);
+  const fetchCheckOptions = async () => {
+    try {
+      const modifiedTableName = appendDetToTableName(Table_Name);
+      const checkOptionsUrls = {
+        "2": `${API_BASE_URL}/${dbName}/get-function2-fieldvalues-checkoptions/${modifiedTableName}`,
+        "4": `${API_BASE_URL}/${dbName}/get-function4-tablerows-checkoptions/${modifiedTableName}`,
+        "5": `${API_BASE_URL}/${dbName}/get-function5-codes-checkoptions/${modifiedTableName}`,
+        "18": `${API_BASE_URL}/${dbName}/get-function18-users-checkoptions/${modifiedTableName}`,
+        "20": `${API_BASE_URL}/${dbName}/get-function20-user-checkoptions/${modifiedTableName}`,
+        "56": `${API_BASE_URL}/${dbName}/get-function56-tablerows-checkoptions/${modifiedTableName}`
+      };
+
+      for (const field of fields) {
+        const { Field_Function, Field_Name } = field;
+
+        if (!checkOptionsUrls[Field_Function]) continue;
+
+        const response = await axios.get(checkOptionsUrls[Field_Function], {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          params: { 'data[field_name]': Field_Name, 'table_name': modifiedTableName }
+        });
+
+        const responseData = response.data;
+        for (const [key, value] of Object.entries(responseData)) {
+          if (value.noofoptions === 1) {
+            const fieldValue = value.single_text || 'Default Value';
+            setSelectedValues(prevValues => ({
+              ...prevValues,
+              [Field_Name]: fieldValue
+            }));
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch check options for fields:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCheckOptions();
+  }, [dbName, Table_Name, fields]);
 
   const appendDetToTableName = (tableName) => `${tableName}_det`;
 

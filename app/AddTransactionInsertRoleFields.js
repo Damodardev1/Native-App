@@ -130,7 +130,7 @@ const AddTransactionInsertRoleFieldsComponent = () => {
           <View style={styles.section}>
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
               {Object.entries(detailFields).map(([key, fields]) => (
-                <DetailFields key={key} fields={fields} dbName={dbName} Table_Name={Table_Name} />
+                <DetailFields key={key} fields={fields} dbName={dbName} Table_Name={Table_Name} tran_id={tran_id} />
               ))}
             </ScrollView>
           </View>
