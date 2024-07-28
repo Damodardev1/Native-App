@@ -3,8 +3,10 @@ import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, useWindowD
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import API_BASE_URL from '../apiconfig';
 
 const admin = require('../assets/images/admin.png');
+const Transactions = require('../assets/images/Group 1410105249trans.svg');
 const notification = require('../assets/images/Notification.svg');
 const logo = require('../assets/images/big_apple_erp_favicon1.png');
 
@@ -127,7 +129,12 @@ const styles = StyleSheet.create({
   activeMenuItem: {
     backgroundColor: '#EB2333',
   },
-  
+  scrollView: {
+    maxHeight: 200,
+  },
+  scrollContent: {
+    paddingBottom: 10,
+  },
 });
 
 const Header = () => {
@@ -159,7 +166,7 @@ const Header = () => {
     try {
       const dbName = await AsyncStorage.getItem('dbName');
       if (dbName) {
-        const response = await fetch(`https://jd1.bigapple.in/api/${dbName}/menus`);
+        const response = await fetch(`${API_BASE_URL}/${dbName}/menus`);
         if (response.ok) {
           const data = await response.json();
           setMenus(data.menus);
@@ -413,12 +420,14 @@ const renderTransactionMenuPageIcons = (transactionMenuPage) => {
   
   return (
     <View style={styles.header}>
+          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
       <TouchableOpacity onPress={toggleMenuIcon}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Image source={logo} style={styles.logo} />
           <Icon name="menu" size={20} color="#303030"/>
         </View>
       </TouchableOpacity>
+      </ScrollView>
       <Image source={notification} style={styles.notification} />
       <TouchableOpacity onPress={() => setNicknameVisible(!nicknameVisible)} style={styles.userContainer}>
         <View style={styles.imageContainer}>

@@ -115,8 +115,8 @@ const styles = StyleSheet.create({
     square3: {
         width: 60,
         height: 60,
-        bottom: 105,
-        right: 45,
+        bottom: 5,
+        right: 5,
         backgroundColor: '#ccfb92a7',
         position: 'absolute',
         zIndex: 2,
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     square4: {
         width: 50,
         height: 50,
-        bottom: 135,
+        // bottom: 135,
         left: 25,
         backgroundColor: '#ff828298',
         position: 'absolute',
