@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 // import Companies from './components/Companies';
-import CompanyDashboard from './CompanyDashboard';
+import CompanyDashboard from './app/CompanyDashboard';
 import LoginScreen from './components/LoginScreen';
 // import AddTransactionInsertRoleFields from './app/AddTransactionInsertRoleFields'; 
 const Stack = createStackNavigator();

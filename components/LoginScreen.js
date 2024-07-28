@@ -7,7 +7,8 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AnimatedSquares from './AnimatedSquares';
 import GorillaSVG from './GorillaSVG';
-import LoginBackground from './LoginBackground'
+import LoginBackground from './LoginBackground';
+import API_BASE_URL from '../apiconfig'; 
 const LoginScreen = () => {
   const navigation = useNavigation();
   const [username, setUsername] = useState('');
@@ -25,7 +26,7 @@ const LoginScreen = () => {
 
     try {
       const requestBody = { username, password };
-      const response = await axios.post('https://jd1.bigapple.in/api/login', requestBody, {
+      const response = await axios.post(`${API_BASE_URL}/login`, requestBody, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
@@ -69,8 +70,8 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.container}>
-      <LoginBackground/>
       <AnimatedSquares />
+      <LoginBackground/>
       <Card style={styles.card}>
         <View style={styles.svgContainer}>
           <GorillaSVG />

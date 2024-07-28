@@ -5,6 +5,7 @@ import axios from 'axios';
 import { DataTable } from 'react-native-paper';
 import admin from '../assets/images/admin.png';
 import { useNavigation } from '@react-navigation/native';
+import API_BASE_URL from '../apiconfig';
 
 const Companies = () => {
   const [userId, setUserId] = useState('');
@@ -36,7 +37,7 @@ const Companies = () => {
       if (storedToken) {
         console.log('Token set:', storedToken);
         setToken(storedToken); 
-        const response = await axios.get('https://jd1.bigapple.in/api/companies', {
+        const response = await axios.get(`${API_BASE_URL}/companies`, {
           headers: {
             'Content-Type': 'application/json',
           }
@@ -110,7 +111,7 @@ const Companies = () => {
       await AsyncStorage.setItem('compName', company.comp_name);
 
       const response = await axios.get(
-        `https://jd1.bigapple.in/api/${company.db_name}/company-dashboard`, 
+        `${API_BASE_URL}/${company.db_name}/company-dashboard`, 
         {
           headers: {
             'Content-Type': 'application/json',
