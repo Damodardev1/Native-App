@@ -71,8 +71,9 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 5,
     zIndex: 2000,
-    maxHeight: 300,
+    maxHeight: 700,
     width: 250,
+    overflowY: 'auto',
   },
   adminDropdown: {
     position: 'absolute',
@@ -376,6 +377,7 @@ const renderTransactionMenuPageIcons = (transactionMenuPage) => {
       setMenuVisible(false);
       if (dbName && Table_Name && id) {
         navigation.navigate('AddTransactionInsertRoleFields', {dbName, Table_Name, id });
+         navigation.navigate('AddTransactionInsertRoleFields', {dbName, Table_Name, id });
       } else {
         console.log('Missing dbName, Table_Name, or id');
       }
@@ -454,3 +456,4 @@ const renderTransactionMenuPageIcons = (transactionMenuPage) => {
 };
 
 export default Header;
+

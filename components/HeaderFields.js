@@ -4,7 +4,7 @@ import debounce from 'lodash.debounce';
 import axios from 'axios';
 import { fetchCheckOptions, fetchDropdownOptions } from './apiUtils'; 
 import API_BASE_URL from '../apiconfig';
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+// import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 const HeaderFields = ({ fields, dbName, Table_Name }) => {
   const [selectedValues, setSelectedValues] = useState({});
@@ -15,7 +15,7 @@ const HeaderFields = ({ fields, dbName, Table_Name }) => {
 
   useEffect(() => {
     fetchCheckOptions(fields, dbName, Table_Name, setSelectedValues)
-      // .then(() => console.log('Check options fetched successfully'))
+      .then(() => console.log('Check options fetched successfully',setSelectedValues))
       .catch(error => setError('Failed to fetch check options'));
   }, [fields, dbName, Table_Name]);
 
@@ -240,9 +240,9 @@ const HeaderFields = ({ fields, dbName, Table_Name }) => {
                 data-fieldname={Field_Name} 
               />
               {currentField === Field_Name && (
-                <ScrollView style={styles.dropdown}>
+                <View style={styles.dropdown}>
                   {renderDropdownOptions(Field_Name)}
-                </ScrollView>
+                </View>
               )}
               {selectedValues[Field_Name] && (
                 <View style={styles.selectedValueContainer}>
@@ -255,30 +255,42 @@ const HeaderFields = ({ fields, dbName, Table_Name }) => {
             </View>
           </TouchableWithoutFeedback>
         )}
-        {isDateField && (
+         {isDateField && (
           <TouchableWithoutFeedback onPress={showDatePicker}>
-            <View style={styles.dateContainer}>
+            <View style={styles.dropdownContainer}>
               <TextInput
-                value={selectedDate || ''}
                 editable={false}
+                value={selectedValues[Field_Name] || ''}
                 placeholder={`Select ${fld_label}`}
                 style={styles.textInput}
-                data-isdet='0' 
-                name={`data[${Field_Name}]`} 
-                data-fieldname={Field_Name} 
               />
+              {/* <DateTimePickerModal
+                isVisible={isDatePickerVisible}
+                mode="date"
+                onConfirm={handleConfirm}
+                onCancel={hideDatePicker}
+              /> */}
             </View>
           </TouchableWithoutFeedback>
         )}
-        <DateTimePickerModal
-          isVisible={isDatePickerVisible}
-          mode="date"
-          onConfirm={handleConfirm}
-          onCancel={hideDatePicker}
-        />
+        {!isSearchable && !isDateField && (
+          <TextInput
+            value={selectedValues[Field_Name] || ''}
+            onChangeText={(text) => setSelectedValues((prevValues) => ({ ...prevValues, [Field_Name]: text }))}
+            style={styles.textInput}
+          />
+        )}
+        {selectedValues[Field_Name] && (
+          <TouchableOpacity
+            onPress={() => clearSelectedValue(Field_Name)}
+            style={styles.clearButton}
+          >
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
+
 
  
 
@@ -312,13 +324,13 @@ const HeaderFields = ({ fields, dbName, Table_Name }) => {
   };
 
   return (
-    // <ScrollView style={styles.container}>
+    <ScrollView style={styles.container}>
     <View>
        {renderFillFields()}
       {renderAutoFillFields()}
       {error && <Text style={styles.errorText}>{error}</Text>}
       </View>
-    // </ScrollView>
+    </ScrollView>
   );
 };
 

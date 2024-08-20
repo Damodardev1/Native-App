@@ -32,6 +32,8 @@ export const fetchCheckOptions = async (fields, dbName, Table_Name, setSelectedV
         if (value.noofoptions === 1) {
           // Set selected values if the field_name matches
           const fieldValue = value.single_text || 'Default Value';
+          console.log(fieldValue);
+
           setSelectedValues(prevValues => ({
             ...prevValues,
             [Field_Name]: fieldValue
