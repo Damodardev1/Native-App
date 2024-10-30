@@ -4,6 +4,7 @@ import axios from 'axios';
 import API_BASE_URL from '../apiconfig';
 import { DataTable } from 'react-native-paper';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const DetailFields = ({ fields, dbName, Table_Name, tran_id }) => {
   const [options, setOptions] = useState({});
@@ -34,9 +35,10 @@ const DetailFields = ({ fields, dbName, Table_Name, tran_id }) => {
         const { Field_Function, Field_Name } = field;
 
         if (!checkOptionsUrls[Field_Function]) continue;
+        const token = await AsyncStorage.getItem('token');
 
         const response = await axios.get(checkOptionsUrls[Field_Function], {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded',   Authorization: `Bearer ${token}` },
           params: { 'data[field_name]': Field_Name, 'table_name': modifiedTableName }
         });
 
@@ -66,11 +68,12 @@ const DetailFields = ({ fields, dbName, Table_Name, tran_id }) => {
     const fetchInitialOptions = async (field) => {
       try {
         const modifiedTableName = appendDetToTableName(Table_Name);
+        const token = await AsyncStorage.getItem('token');
         const response = await axios.post(
           `${API_BASE_URL}/${dbName}/get-function4-tablerows`,
           `data[table_name]=${modifiedTableName}&data[field_name]=${field.Field_Name}`,
           {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded',   Authorization: `Bearer ${token}` },
           }
         );
 
@@ -109,11 +112,12 @@ const DetailFields = ({ fields, dbName, Table_Name, tran_id }) => {
   const fetchOptions = async (fieldName, searchTerm = '') => {
     try {
       const modifiedTableName = appendDetToTableName(Table_Name);
+      const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
         `${API_BASE_URL}/${dbName}/get-function4-tablerows`,
         `data[table_name]=${modifiedTableName}&data[field_name]=${fieldName}&searchTerm=${searchTerm}`,
         {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded',   Authorization: `Bearer ${token}` },
         }
       );
 
@@ -152,8 +156,9 @@ const DetailFields = ({ fields, dbName, Table_Name, tran_id }) => {
 
     const fetchData = async (api) => {
       try {
+        const token = await AsyncStorage.getItem('token');
         const response = await axios.post(api, payload.toString(), {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded',   Authorization: `Bearer ${token}` },
         });
 
         const responseData = response.data;
@@ -365,12 +370,16 @@ const styles = StyleSheet.create({
   },
   tableHeader: {
     backgroundColor: '#EB2333',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
   tableHeaderTitle: {
     justifyContent: 'center',
     alignItems: 'center',
     height: 50,
     width: 100,
+    borderRightWidth: 1,  // Adds border to the right of each header cell
+    borderColor: '#ddd',
   },
   deleteButton: {
     padding: 10,
@@ -386,6 +395,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#fff',
     fontWeight: 'bold',
+
   },
   tableRow: {
     flexDirection: 'row',

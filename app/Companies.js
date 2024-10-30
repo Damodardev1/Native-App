@@ -36,13 +36,14 @@ const Companies = () => {
       const storedToken = await AsyncStorage.getItem('token');
       if (storedToken) {
         console.log('Token set:', storedToken);
-        setToken(storedToken); 
+        setToken(storedToken);  // Store the token in state if needed elsewhere
         const response = await axios.get(`${API_BASE_URL}/companies`, {
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${storedToken}`,  // Use the storedToken directly
           }
         });
-
+  
         if (response.status === 200) {
           const { datas } = response.data;
           const formattedCompanies = datas.map((company) => ({
@@ -66,7 +67,7 @@ const Companies = () => {
       setIsDataLoaded(false);
     }
   };
-
+  
   const handleNetworkError = (error) => {
     console.error('Network error occurred:', error);
     if (error.response) {
@@ -115,9 +116,9 @@ const Companies = () => {
         {
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
           },
         }
-        
       );
 
       if (response.status === 200) {
@@ -125,6 +126,7 @@ const Companies = () => {
         navigation.navigate('CompanyDashboard', {
           dbName: company.db_name,
           compName: company.comp_name,
+          companyData: response.data,
         });
       } else {
         console.error('Failed to send dbName:', response.status);
@@ -134,6 +136,7 @@ const Companies = () => {
       Alert.alert('Error', 'Failed to navigate to company dashboard. Please try again.');
     }
   };
+
 
   return (
     <View style={styles.container}>

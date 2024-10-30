@@ -5,7 +5,7 @@ import axios from 'axios';
 import { fetchCheckOptions, fetchDropdownOptions } from './apiUtils'; 
 import API_BASE_URL from '../apiconfig';
 // import DateTimePickerModal from "react-native-modal-datetime-picker";
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const HeaderFields = ({ fields, dbName, Table_Name }) => {
   const [selectedValues, setSelectedValues] = useState({});
   const [dropdownOptions, setDropdownOptions] = useState({});
@@ -75,11 +75,15 @@ const HeaderFields = ({ fields, dbName, Table_Name }) => {
         params.append('table_name', Table_Name);
         params.append('scr_field', fieldName);
         params.append('field_val', selectedId);
-
+        const token = await AsyncStorage.getItem('token'); 
         const checkOptionsUrl = `${API_BASE_URL}/${dbName}/get-function${fieldFunction}-fieldvalues-checkoptions`;
         const checkOptionsResponse = await axios.post(checkOptionsUrl, params, {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Authorization: `Bearer ${token}`,
+          },
         });
+        
 
         const checkOptionsData = checkOptionsResponse.data;
 
@@ -100,11 +104,21 @@ const HeaderFields = ({ fields, dbName, Table_Name }) => {
           const additionalParams = new URLSearchParams();
           additionalParams.append('table_name', Table_Name);
           additionalParams.append('field_name', fieldName);
-
-          const additionalResponse = await axios.post(`${API_BASE_URL}/${dbName}/get-function${fieldFunction}-fieldvalues`, additionalParams, {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          });
-
+          const token = await AsyncStorage.getItem('token');
+          // const additionalResponse = await axios.post(`${API_BASE_URL}/${dbName}/get-function${fieldFunction}-fieldvalues`, additionalParams, {
+          //   headers: { 'Content-Type': 'application/x-www-form-urlencoded',   Authorization: `Bearer ${token}` },
+          // });
+          const additionalResponse = await axios.post(
+            `${API_BASE_URL}/${dbName}/get-function/${fieldFunction}-fieldvalues`, 
+            additionalParams, 
+            {
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          
           const additionalData = additionalResponse.data;
 
           const options = additionalData
@@ -139,25 +153,24 @@ const HeaderFields = ({ fields, dbName, Table_Name }) => {
     );
   
     return filteredOptions.length > 0 ? (
-      <FlatList
-        data={filteredOptions}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
+      <ScrollView style={styles.scrollView}>
+        {filteredOptions.map((item) => (
           <TouchableOpacity
+            key={item.id}
             onPress={() => {
               setSelectedValues(prevValues => ({ ...prevValues, [fieldName]: item.name }));
               setCurrentField(null);
               handleDropdownChange(fieldName, item.id, item.name);
             }}
             style={styles.dropdownItem}
-            key={item.id}
           >
             <Text style={styles.dropdownItemText}>{item.name}</Text>
           </TouchableOpacity>
-        )}
-      />
+        ))}
+      </ScrollView>
     ) : null;
   };
+  
 
   const openDropdown = (fieldName) => {
     setCurrentField(fieldName);
@@ -324,13 +337,13 @@ const HeaderFields = ({ fields, dbName, Table_Name }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    // <ScrollView style={styles.container}>
     <View>
        {renderFillFields()}
       {renderAutoFillFields()}
       {error && <Text style={styles.errorText}>{error}</Text>}
       </View>
-    </ScrollView>
+    // </ScrollView>
   );
 };
 
@@ -343,9 +356,28 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   fieldLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 16, 
+    color: '#333333',
+    fontWeight: '600',
+    marginBottom: 6, 
+    letterSpacing: 0.5, 
+    textTransform: 'capitalize', 
   },
+  heading: {
+    fontSize: 18, 
+    color: '#ffffff', 
+    fontWeight: 'bold',
+    textAlign: 'center', 
+    paddingVertical: 10,
+    backgroundColor: '#3b5998',
+    borderRadius: 10, 
+    marginVertical: 10, 
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5, 
+  },  
   dropdownContainer: {
     marginTop: 5,
   },

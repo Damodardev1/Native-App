@@ -1,6 +1,6 @@
 import axios from 'axios';
 import API_BASE_URL from '../apiconfig';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 export const fetchCheckOptions = async (fields, dbName, Table_Name, setSelectedValues) => {
   // Define URLs based on Field_Function values
   const checkOptionsUrls = {
@@ -12,40 +12,52 @@ export const fetchCheckOptions = async (fields, dbName, Table_Name, setSelectedV
     "56": `${API_BASE_URL}/${dbName}/get-function56-tablerows-checkoptions/${Table_Name}`
   };
 
-  try {
-    for (const field of fields) {
-      const { Field_Function, Field_Name } = field;
-      
-      // Skip if Field_Function does not have a URL
-      if (!checkOptionsUrls[Field_Function]) continue;
+  // Group fields by Field_Function
+  const fieldsByFunction = fields.reduce((acc, field) => {
+    if (!acc[field.Field_Function]) {
+      acc[field.Field_Function] = [];
+    }
+    acc[field.Field_Function].push(field);
+    return acc;
+  }, {});
 
-      // Fetch check options
-      const response = await axios.get(checkOptionsUrls[Field_Function], {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        params: { 'data[field_name]': Field_Name, 'table_name': Table_Name }
+  try {
+    for (const [functionId, functionFields] of Object.entries(fieldsByFunction)) {
+      // Skip if Field_Function does not have a URL
+      if (!checkOptionsUrls[functionId]) continue;
+
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.get(checkOptionsUrls[functionId], {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded',   Authorization: `Bearer ${token}` },
+        params: { 'table_name': Table_Name }
       });
 
       const responseData = response.data;
 
       // Process response data
-      for (const [key, value] of Object.entries(responseData)) {
-        if (value.noofoptions === 1) {
-          // Set selected values if the field_name matches
-          const fieldValue = value.single_text || 'Default Value';
-          console.log(fieldValue);
+      functionFields.forEach(field => {
+        const { Field_Name } = field;
+        const value = responseData[Field_Name];
 
+        if (value && value.noofoptions === 1) {
+          // Set selected value if field_name matches and noofoptions is 1
+          const fieldValue = value.single_text || 'Default Value';
+
+          // Update the selected values state
           setSelectedValues(prevValues => ({
             ...prevValues,
             [Field_Name]: fieldValue
           }));
+          console.log(`Set ${Field_Name} to ${fieldValue}`);
         }
-      }
+      });
     }
   } catch (error) {
     console.error('Failed to fetch check options for fields:', error);
     throw error;
   }
 };
+
 
 export const fetchDropdownOptions = async (fieldName, fieldFunction, searchTerm, dbName, Table_Name) => {
   const urls = {
@@ -65,9 +77,10 @@ export const fetchDropdownOptions = async (fieldName, fieldFunction, searchTerm,
     params.append('searchTerm', searchTerm);
 
     const functionUrl = urls[fieldFunction];
+    const token = await AsyncStorage.getItem('token');
     if (functionUrl) {
       const response = await axios.post(functionUrl, params, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded',   Authorization: `Bearer ${token}` },
       });
 
       return response.data.map(item => ({

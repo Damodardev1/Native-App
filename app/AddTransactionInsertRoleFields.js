@@ -10,6 +10,7 @@ import Header from '../components/Header';
 import API_BASE_URL from '../apiconfig';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const fieldwidthpx = 150; // Adjust field width as needed
 const isFieldReadOnly = false;
@@ -40,9 +41,14 @@ const AddTransactionInsertRoleFieldsComponent = () => {
       setDropdownOptions({});
       setIsLoading(true);
       setError(null);
+      const token = await AsyncStorage.getItem('token'); // Retrieve the token
 
       const url = `${API_BASE_URL}/${dbName}/add-transaction-insert-role-fields/${Table_Name}/${tran_id}`;
-      const response = await axios.get(url);
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`, 
+        },
+      });
 
       const contentType = response.headers['content-type'];
       if (!contentType || !contentType.includes('application/json')) {
@@ -95,11 +101,16 @@ const AddTransactionInsertRoleFieldsComponent = () => {
 
   const fetchFunction11Details = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/${dbName}/get-Function11-Det-Dependent-Formula-Fields/${Table_Name}`);
+      const token = await AsyncStorage.getItem('token'); // Retrieve token from AsyncStorage
+      const response = await axios.get(`${API_BASE_URL}/${dbName}/get-Function11-Det-Dependent-Formula-Fields/${Table_Name}`, {
+        headers: {
+          Authorization: `Bearer ${token}`, // Send the token in Authorization header
+        },
+      });
       const resultArray = response.data;
-      setHiddenFieldValue(JSON.stringify(resultArray));
+      setHiddenFieldValue(JSON.stringify(resultArray)); // Set the hidden field value
     } catch (error) {
-      console.error('Error fetching data', error);
+      console.error('Error fetching data', error); // Handle errors
     }
   };
 
@@ -267,7 +278,9 @@ const AddTransactionInsertRoleFieldsComponent = () => {
 
   return (
     <View style={styles.container}>
-      <Header />
+              {/* <View style={styles.headerContainer}>
+        <Header />
+      </View> */}
       <View style={styles.topContainer}>
         <ImageBackground
           source={require('../assets/images/Rectangleback.svg')}
@@ -334,7 +347,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
-  },
+  },  
+  // headerContainer: {
+  //   position: 'absolute',  // Make the header float over the content
+  //   top: 0,
+  //   left: 0,
+  //   right: 0,
+  //   zIndex: 1,  // Ensure the header appears on top of other content
+  //   backgroundColor: 'transparent',  // Transparent background to create the floating effect
+  //   // padding: 20, 
+  //   height:'100%', // Adjust padding for header styling
+  // },
   section: {
     marginBottom: 20,
   },
